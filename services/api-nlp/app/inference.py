@@ -50,8 +50,14 @@ def map_stars_to_sentiment(star_label: str) -> Sentiment:
     Raises:
         ValueError: si `star_label` n'est pas dans le format attendu.
     """
-    # TODO Tâche 3 — implémenter le mapping décrit dans `# DECISION:`.
-    raise NotImplementedError("Compléter `map_stars_to_sentiment` (Tâche 3).")
+    nb_etoiles = int(star_label[0])
+    if nb_etoiles in (1, 2):
+        return "négatif"
+    if nb_etoiles == 3:
+        return "neutre"
+    if nb_etoiles in (4, 5):
+        return "positif"
+    raise ValueError(f"Label inattendu : {star_label}")
 
 
 def predict_sentiment(pipeline: Any, text: str, model_name: str) -> SentimentOut:
@@ -66,16 +72,19 @@ def predict_sentiment(pipeline: Any, text: str, model_name: str) -> SentimentOut
     Returns:
         SentimentOut avec sentiment 3 classes, scores 5★ bruts, et latence ms.
     """
-    # TODO Tâche 3 — compléter :
-    #
-    # 1. Mesurer le temps d'inférence (time.perf_counter() avant/après).
-    # 2. Appeler `raw = pipeline(text)` (sans argument en plus : le pipeline
-    #    est déjà construit avec `top_k=None` dans `main.py`). `raw` est une
-    #    liste contenant une liste de 5 dicts {'label', 'score'} : les
-    #    probabilités sont dans `raw[0]`.
-    # 3. Construire `scores_5_stars: dict[str, float]` à partir de `raw[0]`.
-    # 4. Appliquer la règle écrite dans `# DECISION:` pour obtenir la classe
-    #    métier : étoile la plus probable (puis `map_stars_to_sentiment`),
-    #    ou somme des probabilités par groupe d'étoiles.
-    # 5. Renvoyer un `SentimentOut(...)`.
-    raise NotImplementedError("Compléter `predict_sentiment` (Tâche 3).")
+    
+    debut = time.perf_counter()
+    raw = pipeline(text)
+    fin = time.perf_counter()
+    scores_5_stars = {item["label"]: item["score"] for item in raw[0]}
+
+    top_label = max(raw[0], key=lambda x: x["score"])["label"]
+
+    sentiment = map_stars_to_sentiment(top_label)
+
+    return SentimentOut(
+        sentiment=sentiment,
+        scores_5_stars=scores_5_stars,
+        model_name=model_name,
+        latence_ms=(fin - debut) * 1000,
+    )

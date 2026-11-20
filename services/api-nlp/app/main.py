@@ -138,12 +138,4 @@ def predict(payload: ReviewIn) -> SentimentOut:
             detail=f"Texte trop long (> {MAX_TEXT_LENGTH} caractères).",
         )
 
-    # TODO Tâche 3 — Appeler inference.predict_sentiment(). (logging: task 5)
-    # Pour l'instant, on signale que ce n'est pas implémenté.
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail=(
-            "Endpoint /predict pas encore implémenté. Voir Tâche 3 du brief "
-            "et `app/inference.py`."
-        ),
-    )
+    return inference.predict_sentiment(state["pipeline"], payload.texte, MODEL_NAME)
