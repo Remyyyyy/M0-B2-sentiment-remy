@@ -1,0 +1,236 @@
+{
+  "info": {
+    "_postman_id": "cce9b5f9-7d78-4cd1-8b46-78d92abd2093",
+    "name": "M0-B2 Aubergine Hôtels — sentiment FR",
+    "description": "Collection Postman de départ pour le brief M0-B2. Les 5 requêtes fournies (`/health`, `/info` et 3 requêtes `/predict`) sont préremplies. Complète la collection avec au moins 3 requêtes ajoutées : un texte trop long (plus de 2000 caractères, 422 attendu), un avis piégeux de ton choix, et un autre cas de ton choix.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "60231464",
+    "_collection_link": "https://go.postman.co/collection/60231464-cce9b5f9-7d78-4cd1-8b46-78d92abd2093?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "GET /health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Statut du service. `model_loaded:true` quand le modèle CamemBERT est prêt."
+      },
+      "response": []
+    },
+    {
+      "name": "GET /info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/info",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "info"
+          ]
+        },
+        "description": "Métadonnées du service : nom du modèle, classes natives 5★, classes cibles 3 (négatif/neutre/positif), max length texte."
+      },
+      "response": []
+    },
+    {
+      "name": "POST /predict — review positive",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"texte\": \"Personnel charmant, chambre impeccable, petit-déjeuner copieux. On reviendra !\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/predict",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "predict"
+          ]
+        },
+        "description": "Cas valide attendu : sentiment = 'positif'."
+      },
+      "response": []
+    },
+    {
+      "name": "POST /predict — review négative",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"texte\": \"Accueil glacial à la réception, chambre froide et bruyante, nous ne reviendrons pas.\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/predict",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "predict"
+          ]
+        },
+        "description": "Cas valide attendu : sentiment = 'négatif'."
+      },
+      "response": []
+    },
+    {
+      "name": "POST /predict — review piégeuse",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"texte\": \"Accueil incroyable, surtout si on était censé être dans un bar/tabac.\"\n}",
+          "options": {
+            "raw": {
+              "language": "text"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/predict",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "predict"
+          ]
+        },
+        "description": "Cas valide attendu : sentiment = 'positif' alors que la phrase est 'négative'"
+      },
+      "response": []
+    },
+    {
+      "name": "POST /predict — que des espaces (422 attendu)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"texte\": \"     \"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/predict",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "predict"
+          ]
+        },
+        "description": "Texte composé uniquement d'espaces 422 texte_non_blanc. »"
+      },
+      "response": []
+    },
+    {
+      "name": "POST /predict — texte vide (422 attendu)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"texte\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/predict",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "predict"
+          ]
+        },
+        "description": "Validation Pydantic : texte vide doit renvoyer 422."
+      },
+      "response": []
+    },
+    {
+      "name": "POST /predict — texte trop long (422 attendu)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"texte\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla cursus augue nec accumsan pretium. Praesent accumsan justo mollis laoreet dapibus. Sed et porttitor ligula. Aliquam eros felis, malesuada at tristique vel, volutpat quis augue. Nulla cursus nunc commodo est maximus accumsan. Morbi neque magna, suscipit vitae lacus a, ullamcorper rhoncus lectus. Sed vitae nulla vitae sem dapibus ornare. Vivamus vitae laoreet nibh. Suspendisse porttitor, tortor ac scelerisque hendrerit, nulla nunc finibus justo, ut suscipit orci mi id ligula. Suspendisse vulputate ligula sed viverra eleifend. Pellentesque vitae imperdiet velit, nec gravida mauris.Aliquam lacinia sapien elit, eget luctus risus convallis ut. Etiam mattis mauris in ultricies efficitur. Curabitur gravida eu dolor ut ultrices. Pellentesque elementum neque et turpis dignissim, sagittis iaculis turpis ornare. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse scelerisque bibendum eros, eget pretium augue malesuada sit amet. Maecenas congue aliquam elit, ut dignissim augue bibendum eu. Vivamus quis nibh ultricies nulla vehicula hendrerit. Maecenas quis diam mattis, ultrices quam eget, accumsan urna. Suspendisse vel lorem id eros luctus pellentesque. Quisque faucibus nibh est, et ullamcorper arcu feugiat ac. Donec id magna gravida lectus aliquet porta. Sed posuere dui non mollis tincidunt.Phasellus lobortis nibh sit amet quam fermentum fringilla. Suspendisse potenti. Proin eu tellus id lorem tincidunt commodo ac ac orci. Nullam tellus erat, gravida at dignissim id, vehicula id tellus. Nulla est quam, elementum non egestas eu, vestibulum sed ante. Fusce consectetur sagittis sodales. Pellentesque dapibus consequat diam viverra maximus. Cras ullamcorper elit sed ligula bibendum, vel suscipit justo ornare. Nam a nisl aliquam, sagittis augue id, maximus felis. Fusce non vehicula mi. Donec eget magna et lectus sagittis elementum. Donec bibendum eu odio eu rhoncus. Duis rutrum et lacus a porta. Praesent placerat dui id placerat congue. Nunc malesuada magna eros, id molestie elit tempor quis.Nunc nec massa convallis, ultrices neque hendrerit, congue sem. Suspendisse sit amet mi nec urna vulputate pharetra. Sed malesuada justo at ante viverra, at malesuada velit interdum. Vestibulum id magna eu ante mattis pulvinar. Suspendisse interdum dui ante, quis pretium justo mollis a. Nullam vitae eleifend arcu. Etiam venenatis nisl scelerisque, fringilla risus nec, pulvinar diam. Integer gravida augue quam, quis porttitor lacus tincidunt et. Donec a nisi vel dolor scelerisque tempus sed non odio. Pellentesque urna dolor, vulputate a varius sed, porttitor a velit. Phasellus scelerisque ornare ex, a vestibulum enim.Nam non vulputate libero. Aliquam turpis ante, ultricies a venenatis eget, lobortis in purus. Curabitur pulvinar tempor lorem, at dictum lorem fermentum in. Fusce aliquam vel eros id tincidunt. Morbi iaculis in erat sit amet vulputate. Quisque ultricies quam bibendum augue placerat, a consequat tortor dignissim. In feugiat sem vel dapibus iaculis. Vestibulum scelerisque ex turpis, at ullamcorper odio placerat non. Nam sed quam id nisl lobortis laoreet tincidunt a ligula. Fusce semper tempus nisi feugiat volutpat. Cras ac enim nisl. Vestibulum cursus, dui in elementum ultrices, ligula neque tincidunt neque, eget viverra risus est at nisl. Nunc blandit finibus volutpat. Mauris non pretium velit.Proin cursus condimentum bibendum. Cras vitae accumsan erat, sit amet tincidunt libero. Praesent facilisis turpis sit amet malesuada placerat. Etiam quis porttitor lorem, vel suscipit neque. In dictum suscipit pharetra. Praesent pellentesque nibh eget quam interdum fermentum. Duis posuere leo non leo porttitor, sed posuere mauris congue. Maecenas vestibulum lacus eros, a facilisis sapien volutpat non. In nisi mi, commodo ut dapibus nec, sollicitudin id purus. Aenean egestas, ante non tincidunt malesuada, nulla mi rutrum tellus, non tincidunt libero ex ac lectus. Praesent id turpis ligula. Nulla facilisi. Cras elementum lectus ultricies, egestas nisi ultrices, consectetur nulla. Praesent sodales hendrerit nisl a tempor. Suspendisse in suscipit lacus. Aenean quis interdum elit.Sed laoreet ac purus in imperdiet. Integer faucibus consectetur nulla at rutrum. Phasellus pellentesque pellentesque neque eu tincidunt. Etiam condimentum in tellus nec vehicula. Maecenas enim ligula, fermentum dignissim hendrerit faucibus, venenatis vel lectus. Donec porta mauris quis justo auctor, vitae eleifend neque suscipit. Aenean vestibulum tellus et orci consequat, nec tempus neque lobortis. Nam consectetur pellentesque metus, ut vestibulum felis dapibus eu. Nunc urna neque, pharetra id orci et, consectetur vehicula lacus. Phasellus nec commodo quam, eget viverra erat. Nam a rutrum lorem. Etiam sollicitudin enim ut iaculis fringilla. Cras aliquam, justo sit amet fringilla pellentesque, arcu nulla ultrices purus, tristique efficitur tortor elit ut orci. Sed cursus enim suscipit lacus scelerisque, sed condimentum erat scelerisque. Praesent eu ornare nunc, id consequat est. Proin maximus tortor tincidunt nibh consequat, cursus vehicula diam tempor.In fringilla id nunc vel porta. Curabitur sagittis sapien et mauris ornare, quis varius lectus pulvinar. Fusce sollicitudin turpis quam, non rhoncus lectus sodales a. Donec orci ante, vulputate mattis convallis in, fringilla vitae lorem. Pellentesque ultrices erat ac mauris bibendum, quis venenatis arcu porta. Vestibulum rhoncus viverra malesuada. Nam blandit, est eget imperdiet dignissim, turpis mi efficitur purus, at feugiat velit dolor eu ex. Cras tincidunt ipsum sit amet blandit aliquet. Phasellus luctus nisl vitae sapien auctor facilisis. Morbi iaculis mattis velit, eget maximus neque lobortis eget.Proin lacus nibh, auctor id orci sit amet, efficitur convallis dolor. Mauris quis odio nisi. Nam consectetur, purus non eleifend varius, sapien metus venenatis lacus, sit amet volutpat libero augue nec turpis. Praesent malesuada odio nec ipsum bibendum, vel molestie ex consequat. Proin urna dolor, elementum sit amet dapibus vitae, ultricies sit amet ipsum. Fusce eu ligula at ipsum auctor dignissim. Nullam sit amet molestie erat. Mauris nunc purus, tempor nec efficitur id, lacinia sit amet nisl. Nullam ut efficitur dui. Fusce a laoreet sem. Nullam eget turpis in nisl volutpat sodales in et quam. Donec porttitor sagittis ipsum in vestibulum. Nunc eu viverra tortor, ut aliquam dolor. Morbi sagittis congue nunc ac varius.Curabitur rutrum auctor diam vel sagittis. Etiam porta justo dapibus orci consequat fermentum. Phasellus varius enim ligula, sit amet cursus nulla sagittis in. Aenean nisl tellus, pharetra at tincidunt vel, volutpat a risus. Vestibulum posuere fringilla augue at dignissim. Phasellus condimentum, mauris a pretium ullamcorper, lorem libero mattis odio, sed efficitur purus enim eget magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Maecenas scelerisque suscipit nulla sit amet pellentesque. Aenean purus nisl, pellentesque id enim at, auctor consequat ex. Maecenas tellus ante, euismod at viverra vehicula, feugiat vitae sem. Duis dapibus ex ut eros imperdiet, quis dictum enim posuere.Phasellus vel semper dui, at ultricies mauris. Curabitur sollicitudin placerat nisl, ut finibus lorem vulputate nec. Suspendisse porttitor enim nec dui porttitor pharetra. Duis varius nulla nec laoreet mollis. Suspendisse tempor lorem magna, vel hendrerit velit laoreet egestas. Sed sit amet pretium velit. Cras tristique, lacus non aliquam tincidunt, eros tellus malesuada ante, sit amet consequat purus velit eget dui. Vivamus mattis nunc commodo quam elementum, eget hendrerit elit tincidunt. Nullam quis erat aliquet, ullamcorper nulla id, mattis ex. Nullam imperdiet nisi volutpat nulla sodales, in egestas turpis viverra. Nam vel felis blandit, commodo velit sed, sollicitudin sapien.Vestibulum convallis nec lectus ut luctus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Curabitur a sapien dui. Nulla leo enim, interdum id vehicula eu, fermentum et ex. Nulla maximus placerat sem id finibus. Vivamus ut odio id diam volutpat tristique vitae nec nulla. Quisque eu magna sodales, elementum dolor viverra, venenatis lectus. Sed nec venenatis tortor, at suscipit justo. Suspendisse sit amet diam sit amet nisl pretium consectetur id id dui.Sed auctor, ipsum vitae tempor pellentesque, leo libero viverra mauris, a maximus ligula ex vel diam. Phasellus ac felis id eros luctus pulvinar. Praesent elit augue, luctus sed interdum a, vehicula sed ex. Integer mattis gravida feugiat. Fusce nec ultricies leo, varius blandit mauris. Vivamus pretium ullamcorper neque nec vulputate. Aenean nisl ligula, convallis eget ullamcorper sed, consectetur quis lorem.Quisque neque ante, porttitor sed lorem vitae, tempor accumsan dolor. Etiam tempus pretium varius. Cras hendrerit dui ipsum, eget tincidunt dui bibendum tristique. Aliquam quis laoreet felis. Nam aliquet odio nisl, ac blandit sem viverra et. Cras bibendum sodales risus at volutpat. Fusce quam tortor, egestas vel venenatis ut, dictum sit amet augue. Ut ac velit faucibus, iaculis metus nec, iaculis lorem. Aliquam eleifend nulla ex, et pulvinar mauris posuere et. Maecenas porttitor, mi sed consectetur sagittis, elit risus lobortis elit, quis scelerisque orci ligula sit amet lorem. Morbi pellentesque malesuada fringilla.Donec id sem magna. Quisque a faucibus nibh. Aliquam elementum malesuada ullamcorper. Maecenas pretium interdum elit, eu pharetra massa. Morbi eget malesuada libero, vel pretium nulla. Integer sed sagittis ex, eget finibus nibh. Integer volutpat condimentum scelerisque. Praesent nec iaculis elit. Cras rutrum nulla leo, ut suscipit nunc maximus id. Mauris bibendum, lorem eu auctor laoreet, sem metus fringilla neque, sit amet aliquam libero eros id tellus. Curabitur sagittis, diam a dapibus condimentum, dolor dui scelerisque odio, eget scelerisque metus purus sed nunc. Integer elementum massa suscipit, gravida lorem quis, pulvinar est. Mauris a urna et nibh efficitur lacinia quis eget odio. Vivamus et tristique neque, in accumsan sem.Morbi posuere vulputate diam non gravida. Ut faucibus fermentum ante. Suspendisse a massa orci. Sed pellentesque felis tortor, varius tristique lacus lobortis non. Donec at risus nibh. Aliquam elementum eros sit amet ante gravida consectetur. Mauris molestie eu diam eu vehicula. Praesent placerat dui leo, et vulputate diam varius id. Sed rutrum finibus vulputate. Duis laoreet vitae ex sollicitudin dignissim. Proin mi ante, hendrerit viverra leo ac, blandit rutrum est. Ut ac nisi vitae tortor varius vulputate vel quis nisi. Donec varius nisl at tellus molestie auctor. Integer risus velit, euismod a dictum ac, dignissim vel erat.Duis tincidunt nunc enim, quis iaculis felis placerat eget. Phasellus in nisl posuere, tincidunt purus vel, tempor ipsum. Curabitur scelerisque in libero et dignissim. Integer gravida tristique mauris, id laoreet enim pulvinar at. Nam id mauris vitae erat ornare vestibulum sed et neque. Duis blandit elit eu nulla ornare, eget euismod dolor sagittis. Sed finibus venenatis placerat. Sed malesuada vitae diam non blandit. Integer ipsum ligula, malesuada sit amet rhoncus quis, feugiat id odio. Praesent in tellus purus. Etiam rhoncus feugiat ante, sed pharetra leo volutpat nec. Proin libero libero, imperdiet id ex vitae, convallis accumsan est. Phasellus rhoncus vitae diam et dictum. Sed velit nisl, suscipit eu varius nec, suscipit sed urna. Pellentesque interdum, lorem ut sagittis ullamcorper, neque nisi semper arcu, sit amet sollicitudin lectus nisi eu arcu.Nulla ultricies odio erat, quis porttitor orci malesuada in. Vivamus a mi urna. Nulla ut ex aliquam, condimentum est et, fermentum nibh. Nulla vulputate facilisis est nec pretium. Nullam semper ac felis ac commodo. Vivamus pharetra ante nibh, a aliquet nunc fermentum vel. Proin quis nulla ligula. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec et odio ac felis facilisis viverra. Pellentesque lobortis odio ante, nec sollicitudin lectus placerat dapibus. Curabitur sit amet lectus et mi ultrices ultricies. Donec ac tincidunt enim. Aliquam sagittis nibh tortor, at aliquam nulla consequat sed. In vitae massa nulla.Integer nec tincidunt quam. Cras augue nulla, dictum sit amet purus eu, fermentum eleifend justo. Morbi euismod dictum mauris, eget auctor elit lacinia sed. Vestibulum diam ligula, tempor quis rhoncus id, tempus pretium enim. Integer eget quam quis ipsum porttitor tincidunt. Ut nec dictum urna. Sed auctor arcu ut nisl condimentum euismod. In maximus consectetur risus. Morbi eu congue urna, quis dictum purus. Quisque metus sem, semper ac ullamcorper ac, molestie id ante.Nullam mattis lectus vel porta sagittis. Ut ut porta lorem. Nullam luctus nibh augue, et sodales felis sagittis ac. In maximus justo fermentum, venenatis sem suscipit, dapibus turpis. Vestibulum malesuada, dolor a aliquam laoreet, nulla elit tempus diam, a tempor lacus justo eu tellus. Quisque ultrices tempus tellus, vitae placerat sapien. Nunc et pretium massa.Suspendisse non dapibus nunc, at auctor nisi. In in tincidunt leo. Sed lectus nisl, imperdiet eu lectus in, porttitor varius tortor. Aenean dignissim consequat semper. Vestibulum nec malesuada tortor. Aliquam placerat congue lacus varius euismod. Etiam rutrum elementum nisi at pretium. Praesent ut enim at est maximus finibus a a justo. Pellentesque quis mollis urna. Mauris laoreet molestie diam, et faucibus nulla. Aenean volutpat viverra sapien sit amet rutrum. Nulla iaculis.\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/predict",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "predict"
+          ]
+        },
+        "description": "Validation Pydantic : texte trop long doit renvoyer 422."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    }
+  ]
+}
