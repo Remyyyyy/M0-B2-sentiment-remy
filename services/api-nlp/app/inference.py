@@ -15,10 +15,12 @@ en argument.
 """
 from __future__ import annotations
 
-# DECISION: (à écrire avant de coder, en français)
-#   Règle retenue : ... étoiles -> négatif / ... -> neutre / ... -> positif
-#   Argument métier 1 : ...
-#   Argument métier 2 : ...
+# DECISION:
+#   Règle retenue : 1-2 étoiles -> négatif / 3 -> neutre / 4-5 -> positif, en prenant l'étoile la plus probable
+#   Argument métier 1 : un client mécontent non repéré, c'est un client perdu qui ne revient pas et un problème (ex : douche qui fuit) qui n'est jamais réglé. On classe donc les 2 étoiles en négatif pour ne pas les rater.
+#   Argument métier 2 : une alerte à tort surcharge le directeur d'avis qui sont en fait corrects, il ne lit plus les alertes. On laisse donc les 3 étoiles en neutre.
+
+
 
 import time
 from typing import Any
