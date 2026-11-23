@@ -19,14 +19,24 @@ from loguru import logger
 from app import inference
 from app.schemas import HealthOut, InfoOut, ReviewIn, SentimentOut
 
+from pathlib import Path
 
 # --- Configuration Loguru (compact, lisible pour des apprenants) ---
 # Désactive `diagnose` (dump des variables locales dans la traceback) et
 # `backtrace` (frames externes des libs). On garde un format standard.
 # Pour debugger un cas complexe, repasse à diagnose=True ponctuellement.
 logger.remove()
-logger.add(sys.stderr, level="INFO", backtrace=False, diagnose=False)
-
+logger.add(sys.stderr, level="INFO", backtrace=False, diagnose=False, serialize=True)
+LOG_DIR = Path("logs")
+LOG_DIR.mkdir(exist_ok=True)
+logger.add(
+    LOG_DIR / "api.log",
+    rotation="5 MB",
+    retention="7 days",
+    compression="zip",
+    level="INFO",
+    enqueue=True,
+)
 
 # --- Filtre access log uvicorn : on n'affiche pas les pings healthcheck ---
 # Sans ce filtre, le healthcheck Docker (toutes les 30 s) pollue les logs
@@ -138,4 +148,6 @@ def predict(payload: ReviewIn) -> SentimentOut:
             detail=f"Texte trop long (> {MAX_TEXT_LENGTH} caractères).",
         )
 
-    return inference.predict_sentiment(state["pipeline"], payload.texte, MODEL_NAME)
+    sentiment = inference.predict_sentiment(state["pipeline"], payload.texte, MODEL_NAME)
+    logger.info("Prédiction effectuée", review=payload.texte[:80], sentiment=sentiment.sentiment, latence_ms=sentiment.latence_ms)
+    return sentiment
