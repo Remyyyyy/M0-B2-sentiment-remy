@@ -16,7 +16,7 @@ L'URL de l'API est dans la variable d'environnement `API_URL`
 from __future__ import annotations
 
 import os
-
+import httpx
 import streamlit as st
 
 
@@ -41,22 +41,40 @@ texte = st.text_area(
     placeholder="Ex : Personnel charmant, chambre impeccable, on reviendra !",
 )
 
+with httpx.Client(base_url=API_URL, timeout=2) as client:
+    try:
+        healthy = client.get("/health").json().get("model_loaded")
+        st.sidebar.success("✅ API joignable" if healthy else "⚠️ API en chargement")
+    except httpx.HTTPError:
+        st.sidebar.error("❌ API down")
+
 if st.button("Analyser", type="primary", disabled=not texte.strip()):
-    # TODO Tâche 4 — Implémenter l'appel HTTP à POST {API_URL}/predict
-    #
-    # Indications :
-    # - Utilise httpx (déjà dans requirements.txt).
-    # - Timeout 10 s.
-    # - En cas d'erreur réseau ou HTTP >= 500 : affiche un message d'erreur
-    #   clair via st.error("...").
-    # - Affiche le sentiment dans un encadré coloré (st.success / st.warning /
-    #   st.error selon la classe).
-    # - Affiche les scores 5 étoiles bruts via st.bar_chart().
-    st.info("📡 Appel API à implémenter — Tâche 4 du brief M0-B2.")
-    st.code(
-        f'httpx.post("{API_URL}/predict", json={{"texte": "..."}}, timeout=10)',
-        language="python",
-    )
+    try:
+        with st.spinner("Inférence en cours…"):
+            response = httpx.post(
+                f"{API_URL}/predict",
+                json={"texte": texte},
+                timeout=10,
+            )
+        response.raise_for_status()
+        data = response.json()
+
+    except httpx.TimeoutException:
+        st.error("⏱️  Timeout : l'API a mis plus de 10 s.")
+    except httpx.ConnectError:
+        st.error("🔌 Connexion refusée : l'API tourne-t-elle ?")
+    except httpx.HTTPStatusError as e:
+        st.error(f"❌ HTTP {e.response.status_code} : {e.response.text}")
+    except httpx.HTTPError as exc:
+        st.error(f"Erreur API : {exc}")
+
+    else:
+        sentiment = data["sentiment"]
+        display = {"négatif": st.error, "neutre": st.warning, "positif": st.success}
+        display[sentiment](f"Sentiment détecté : **{sentiment}**")
+        st.bar_chart(data["scores_5_stars"])
+        st.caption(f"Latence : {data['latence_ms']} ms — modèle : {data['model_name']}")
+
 
 with st.sidebar:
     st.markdown(f"**API URL** : `{API_URL}`")
