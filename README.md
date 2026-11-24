@@ -1,4 +1,58 @@
-# M0-B2 — Squelette repo (sentiment FR · stack `docker compose`)
+# M0-B2 — Sentiment FR des avis Aubergine Hôtels (Rémy)
+
+Service qui classe les avis clients d'Aubergine Hôtels en **négatif / neutre / positif**.
+- **API** FastAPI (`api-nlp`, port 8000) : le modèle CamemBERT
+  `cmarkea/distilcamembert-base-sentiment` note l'avis de 1★ à 5★, puis la règle
+  1-2★ → négatif / 3★ → neutre / 4-5★ → positif donne la classe métier.
+- **Interface** Streamlit (`ui-streamlit`, port 8501) : on colle un avis, on obtient
+  le sentiment en couleur et les probabilités par étoile.
+- **Lancement** : `cp .env.example .env` puis `docker compose up --build`.
+- **Analyse** (architecture, erreurs du modèle, justification du mapping) :
+  [`rendu/remy/ANALYSE.md`](rendu/remy/ANALYSE.md).
+
+## Preuves que la stack tourne
+
+### `docker compose ps`
+
+```
+NAME                IMAGE                               COMMAND                  SERVICE        CREATED         STATUS                   PORTS
+m0b2-api-nlp        m0-b2-sentiment-remy-api-nlp        "uvicorn app.main:ap…"   api-nlp        3 minutes ago   Up 3 minutes (healthy)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+m0b2-ui-streamlit   m0-b2-sentiment-remy-ui-streamlit   "streamlit run app.p…"   ui-streamlit   3 minutes ago   Up 3 minutes             0.0.0.0:8501->8501/tcp, [::]:8501->8501/tcp
+```
+
+### `curl` sur `/predict`
+
+```bash
+curl -X POST http://localhost:8000/predict \
+  -H 'Content-Type: application/json' \
+  -d '{"texte":"Personnel charmant, on reviendra !"}'
+```
+
+```json
+{"sentiment":"positif","scores_5_stars":{"5 stars":0.5744120478630066,"4 stars":0.37135830521583557,"3 stars":0.04611708223819733,"2 stars":0.005930732470005751,"1 star":0.0021817986853420734},"model_name":"cmarkea/distilcamembert-base-sentiment","latence_ms":111.20107999886386}
+```
+
+### `pytest -v`
+
+```
+collected 9 items
+
+tests/test_health.py::test_health_endpoint_returns_200 PASSED                                                    [ 11%]
+tests/test_predict.py::test_predict_cas_nominal_200 PASSED                                                       [ 22%]
+tests/test_predict.py::test_predict_texte_vide_422 PASSED                                                        [ 33%]
+tests/test_predict.py::test_predict_texte_trop_long_422 PASSED                                                   [ 44%]
+tests/test_predict.py::test_predict_avis_du_csv[H\xf4tel d'une m\xe9diocrit\xe9 rare. Bruit de plomberie toute la nuit, et personne pour s'en occuper.-n\xe9gatif] PASSED [ 55%]
+tests/test_predict.py::test_predict_avis_du_csv[Petit d\xe9jeuner buffet correct mais sans surprise. Chambre propre, literie ferme. Standard.-neutre] PASSED [ 66%]
+tests/test_predict.py::test_predict_avis_du_csv[Que dire \xe0 part que c'\xe9tait parfait. Personnel, propret\xe9, confort, calme. Tout y \xe9tait. Bravo.-positif] PASSED [ 77%]
+tests/test_predict.py::test_predict_probabilities_equals_one PASSED                                              [ 88%]
+tests/test_predict.py::test_predict_missing_field_returns_422 PASSED                                             [100%]
+
+================================================== 9 passed in 3.15s ===================================================
+```
+
+---
+
+
 
 > **Repo template GitHub.** Une seule personne par binôme clique sur
 > **« Use this template »** → **Create a new repository** → nomme le repo
