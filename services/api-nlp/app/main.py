@@ -26,7 +26,7 @@ from pathlib import Path
 # `backtrace` (frames externes des libs). On garde un format standard.
 # Pour debugger un cas complexe, repasse à diagnose=True ponctuellement.
 logger.remove()
-logger.add(sys.stderr, level="INFO", backtrace=False, diagnose=False, serialize=True)
+logger.add(sys.stderr, level="INFO", backtrace=False, diagnose=False)
 LOG_DIR = Path("logs")
 LOG_DIR.mkdir(exist_ok=True)
 logger.add(
@@ -36,6 +36,7 @@ logger.add(
     compression="zip",
     level="INFO",
     enqueue=True,
+    serialize=True
 )
 
 # --- Filtre access log uvicorn : on n'affiche pas les pings healthcheck ---
