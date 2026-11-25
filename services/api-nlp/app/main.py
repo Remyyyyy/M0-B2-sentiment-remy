@@ -10,6 +10,8 @@ from __future__ import annotations
 import logging
 import os
 import sys
+import time
+
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -17,7 +19,7 @@ from fastapi import FastAPI, HTTPException, status
 from loguru import logger
 
 from app import inference
-from app.schemas import HealthOut, InfoOut, ReviewIn, SentimentOut
+from app.schemas import HealthOut, InfoOut, ReviewIn, SentimentOut, BatchIn, BatchOut
 
 from pathlib import Path
 
@@ -152,3 +154,31 @@ def predict(payload: ReviewIn) -> SentimentOut:
     sentiment = inference.predict_sentiment(state["pipeline"], payload.texte, MODEL_NAME)
     logger.info("Prédiction effectuée", review=payload.texte[:80], sentiment=sentiment.sentiment, latence_ms=sentiment.latence_ms)
     return sentiment
+
+
+@app.post("/predict/batch", response_model=BatchOut, status_code=status.HTTP_200_OK)
+def predict_batch(payload: BatchIn) -> BatchOut:
+    """Classifie un batch de reviews FR en `négatif / neutre / positif`."""
+    for text in payload.textes:
+        if len(text) > MAX_TEXT_LENGTH:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Texte trop long (> {MAX_TEXT_LENGTH} caractères).",
+            )
+    
+
+    debut = time.perf_counter()
+
+    # --- v2 : pipeline en lot ---
+    sentiments = inference.predict_sentiment_batch(state["pipeline"], payload.textes, MODEL_NAME)
+    
+    # --- v1 : boucle (décommenter pour mesurer, et commenter la v2) ---
+    # sentiments = []
+    # for texte in payload.textes:
+    #     sentiment = inference.predict_sentiment(state["pipeline"], texte, MODEL_NAME) 
+    #     sentiments.append(sentiment)
+        
+        
+    fin = time.perf_counter()
+    logger.info("Prédiction batch effectuée", nb_textes=len(payload.textes), latence_ms=((fin - debut) * 1000 ))
+    return BatchOut(sentiments=sentiments, latence_totale_ms=(fin - debut) * 1000 )

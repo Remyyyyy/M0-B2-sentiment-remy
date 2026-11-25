@@ -88,3 +88,24 @@ def predict_sentiment(pipeline: Any, text: str, model_name: str) -> SentimentOut
         model_name=model_name,
         latence_ms=(fin - debut) * 1000,
     )
+
+def predict_sentiment_batch(pipeline: Any, texts: list[str], model_name: str) -> list[SentimentOut]:
+    debut = time.perf_counter()
+    raw = pipeline(texts)
+    fin = time.perf_counter()   
+    
+
+    resultats = []
+    for scores in raw:
+        scores_5_stars = {item["label"]: item["score"] for item in scores}
+        top_label = max(scores, key=lambda x: x["score"])["label"]
+        
+        sentiment = map_stars_to_sentiment(top_label)
+        
+        resultats.append(SentimentOut(
+            sentiment=sentiment,
+            scores_5_stars=scores_5_stars,
+            model_name=model_name,
+            latence_ms=(fin - debut) * 1000 / len(texts),
+        ))
+    return resultats

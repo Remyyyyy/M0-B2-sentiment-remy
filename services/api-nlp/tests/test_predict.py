@@ -64,3 +64,27 @@ def test_predict_missing_field_returns_422(client):
     """Un champ obligatoire absent doit être refusé par Pydantic (422)."""
     r = client.post("/predict", json={})
     assert r.status_code == 422
+
+def test_batch_3_textes_200(client):
+    """3 textes → 200, 3 résultats dans l'ordre d'envoi"""
+    textes = [
+        "Wifi quasi inexistant, climatisation poussive, petit-déjeuner aux abonnés absents. Évitez.",
+        "Petit déjeuner buffet correct mais sans surprise. Chambre propre, literie ferme. Standard.",
+        "Vue magnifique, lit confortable, calme absolu. Exactement ce qu'on cherchait pour un weekend.",
+    ]
+    r = client.post("/predict/batch", json={"textes": textes})
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body["sentiments"]) == 3
+    sentiments_recus = [resultat["sentiment"] for resultat in body["sentiments"]]
+    assert sentiments_recus == ["négatif", "neutre", "positif"] 
+
+def test_predict_batch_textes_vide_422(client):
+    """Textes vides"""
+    r = client.post("/predict/batch", json={"textes": []})
+    assert r.status_code == 422
+
+def test_predict_batch_textes_trop_long_422(client):
+    """Trop de textes dans le batch"""
+    r = client.post("/predict/batch", json={"textes": ["test"] * 33})
+    assert r.status_code == 422
