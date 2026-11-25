@@ -80,3 +80,26 @@ class InfoOut(BaseModel):
         examples=[["négatif", "neutre", "positif"]],
     )
     max_text_length: int
+
+
+class BatchIn(BaseModel):
+    textes: list[str] = Field(
+        ...,
+        min_length=1,
+        max_length=32,
+        description="Liste de textes de la review en français (entre 1 et MAX_TEXT_LENGTH caractères).",
+        examples=[["Personnel charmant, chambre impeccable !", "Douche qui fuit, bruit toute la nuit."]],
+    )
+
+    @field_validator("textes")
+    @classmethod
+    def texte_non_blanc(cls, v: list[str]) -> list[str]:
+        """Refuse les chaînes composées uniquement d'espaces dans la liste"""
+        for text in v:
+            if not text.strip():
+                raise ValueError("Le texte ne doit pas être vide ou composé uniquement d'espaces.")
+        return v
+
+class BatchOut(BaseModel):
+    sentiments: list[SentimentOut] = Field(..., description="Liste des classes métier après mapping 5★ → 3 classes.")
+    latence_totale_ms: float = Field(..., ge=0, description="Temps de traitement total du batch en millisecondes.")
