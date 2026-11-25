@@ -137,3 +137,23 @@ Garder CamemBERT : il est rapide, gratuit à l'usage, toujours dans le bon forma
 
 ## F — Endpoint /predict/batch
 
+### Pourquoi limiter le lot à 32 ?
+
+Car le temps de réponse serait trop long pour trop d'avis, en sachant qu'on a un timeout de 10 secondes dans Streamlit. Pareil pour la mémoire, qui serait surchargée avec trop d'avis, ce qui pourrait planter l'application.
+En moyenne, un avis est predict en 30ms donc 32 avis ont une valeur de 1s de predict.
+
+### Mesures
+
+Script : [`mesurer_batch.py`](mesurer_batch.py). Les 30 avis du CSV, chaque mesure faite 3 fois, médiane retenue, temps mesuré côté client.
+
+| Mesure | Médiane |
+|---|---|
+| A : 30 `/predict` | ≈ 900-920 ms (921 au 1er lancement, 899 au 2ᵉ) |
+| B : `/predict/batch` v1 (boucle) | ≈ 860 ms |
+| C : `/predict/batch` v2 (pipeline en lot) | ≈ 832 ms |
+
+### Explication de l'écart
+
+L'écart entre A et B/C s'explique par le nombre d'appels (30 contre 1).
+Mais les écarts sont petits car tout se passe sur mon poste et pas sur un serveur distant, où l'écart serait beaucoup plus creusé entre `/predict` et `/predict/batch`, car pour le deuxième on envoie tout d'un coup.
+
