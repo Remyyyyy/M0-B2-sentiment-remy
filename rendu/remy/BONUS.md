@@ -157,3 +157,31 @@ Script : [`mesurer_batch.py`](mesurer_batch.py). Les 30 avis du CSV, chaque mesu
 L'écart entre A et B/C s'explique par le nombre d'appels (30 contre 1).
 Mais les écarts sont petits car tout se passe sur mon poste et pas sur un serveur distant, où l'écart serait beaucoup plus creusé entre `/predict` et `/predict/batch`, car pour le deuxième on envoie tout d'un coup.
 
+---
+
+## E — Healthcheck dimensionné sur la réalité
+
+### Mesures du démarrage
+
+Temps entre `docker compose up -d` et la première réponse de `/health` :
+
+| Démarrage | Durée |
+|---|---|
+| À froid (cache `models/` vidé, téléchargement du modèle) | ≈ 40 s |
+| À chaud (modèle déjà en cache) | ≈ 5 s |
+
+### Ce que voit l'utilisateur pendant le démarrage
+
+En haut à gauche de Streamlit : "API Down" et dans l'analyse de contenu : "Connexion refusée : l'API tourne-t-elle ?"
+
+### start_period ou retries ?
+
+start_period est le temps de charge du modèle qu'on ne considère pas dans le healthcheck (le temps de mise en place). retries permet de relancer les healthcheck pour voir si c'était une simple erreur ou une vraie panne au bout du nombre de (retries) sans réponse (timeout) toutes les (intervals)
+
+#### Quand un test échoue ?
+
+Pendant le start_period, un check qui échoue n'est pas compté dans les retries. Si un check réussit, le service passe directement healthy.
+
+### Et un start_period de 10 minutes ?
+
+Le problème est qu'on va détecter une potentielle erreur/panne après la durée de start_period de 10min et aussi que l'appli va démarrer au bout de 10min qui ne sont pas forcément nécessaire

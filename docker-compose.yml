@@ -26,10 +26,10 @@ services:
       - ./logs:/app/logs
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 40s
+      interval: 10s # 10 secondes car j'ai mesuré 5 secondes pour que l'API soit prête à chaud, et en dessous on l'interroge pour rien
+      timeout: 5s # le temps de réponse autorisé à /health, sinon on considère que le service est down
+      retries: 3 # je laisse à 3 car un check peut raté et on laisse 2 autres chances et une marge de 30 secondes max pour détécté un souci
+      start_period: 60s # 60 secondes car j'ai mesuré 40 secondes donc pour laisser de la marge au chargement du modèle
     networks:
       - m0b2-net
 
@@ -44,7 +44,7 @@ services:
       API_URL: http://api-nlp:8000
     depends_on:
       api-nlp:
-        condition: service_started
+        condition: service_healthy
     networks:
       - m0b2-net
 
